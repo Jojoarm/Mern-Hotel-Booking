@@ -22,6 +22,7 @@
     "multer": "^2.0.0",
     "nodemailer": "^7.0.3",
     "nodemon": "^3.1.10",
+    "stripe": "^18.1.1",
     "svix": "^1.65.0"
   },
   "devDependencies": {

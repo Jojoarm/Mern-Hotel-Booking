@@ -4,6 +4,7 @@ import { RoomType } from '../../../shared/types';
 import Room from '../models/Room';
 import Hotel from '../models/Hotel';
 import transporter from '../config/nodemailer';
+import { Stripe } from 'stripe';
 
 //Function to check availability of room
 type CheckAvailabilityProps = {
@@ -169,6 +170,67 @@ export const getHotelBookings = async (
     res.json({
       success: false,
       message: 'Failed to fetch hotel bookings' + (error as Error).message,
+    });
+  }
+};
+
+export const stripePayment = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const { bookingId } = req.body;
+    if (!bookingId) {
+      res
+        .status(400)
+        .json({ success: false, message: 'Booking ID is required' });
+      return;
+    }
+    const booking = await Booking.findById(bookingId);
+    if (!booking) {
+      res.json({ success: false, message: 'Booking not found' });
+      return;
+    }
+    const roomData = await Room.findById(booking.room).populate('hotel');
+    if (!roomData || !roomData.hotel) {
+      res
+        .status(404)
+        .json({ success: false, message: 'Room or hotel not found' });
+      return;
+    }
+    const totalPrice = booking.totalPrice;
+    const origin = req.headers.origin || 'http://localhost:3000';
+
+    const line_items: Stripe.Checkout.SessionCreateParams.LineItem[] = [
+      {
+        price_data: {
+          currency: 'usd',
+          product_data: {
+            name: roomData?.hotel.name,
+          },
+          unit_amount: totalPrice * 100,
+        },
+        quantity: 1,
+      },
+    ];
+
+    const stripeInstance = new Stripe(process.env.STRIPE_SECRET_KEY as string);
+
+    // Create checkout session
+    const session = await stripeInstance.checkout.sessions.create({
+      line_items,
+      mode: 'payment',
+      success_url: `${origin}/loader/my-bookings`,
+      cancel_url: `${origin}/my-bookings`,
+      metadata: {
+        bookingId,
+      },
+    });
+    res.json({ success: true, url: session.url });
+  } catch (error) {
+    res.json({
+      success: false,
+      message: 'Failed to process payment' + (error as Error).message,
     });
   }
 };
