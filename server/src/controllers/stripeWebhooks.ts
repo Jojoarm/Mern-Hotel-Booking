@@ -8,6 +8,7 @@ export const stripeWebhooks = async (
   res: Response
 ): Promise<any> => {
   // stripe gateway initialize
+  console.log('Got here');
   const stripeInstance = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
     apiVersion: '2025-04-30.basil',
   });
@@ -27,6 +28,7 @@ export const stripeWebhooks = async (
     return res.status(400).send(`Webhook Error: ${(error as Error).message}`);
   }
 
+  console.log(event);
   // Handle the event
   if (event.type === 'checkout.session.completed') {
     // const paymentIntent = event.data.object;
