@@ -12,7 +12,7 @@ import ListRoom from './pages/hotelOwner/ListRoom';
 import { Toaster } from 'react-hot-toast';
 import { useAppContext } from './context/AppContext';
 import HotelReg from './components/HotelReg';
-import Loader from './components/loader';
+import Loader from './components/Loader';
 // import HotelReg from './components/HotelReg';
 
 const App = () => {
